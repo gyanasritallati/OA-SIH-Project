@@ -1,6 +1,6 @@
-fastapi==0.141.1
-uvicorn==0.52.4
-python-multipart==0.0.32
+fastapi
+uvicorn
+python-multipart
 
 numpy==2.5.2
 pandas==3.0.5
@@ -10,7 +10,7 @@ joblib==1.5.3
 opencv-python==5.0.0.93
 mediapipe==0.10.35
 
-reportlab==5.0.1
+reportlab
 
 interpret==0.7.8
 torch

@@ -1,3 +1,4 @@
+
 import csv
 import cv2
 import mediapipe as mp
@@ -121,12 +122,12 @@ def extract_pose(video_path, output_csv=None):
                     )
 
                 # ------------------------------------------------
-                # Reduce frame resolution before MediaPipe
+                # Reduce frame resolution aggressively for Render
                 # ------------------------------------------------
 
                 height, width = frame.shape[:2]
 
-                MAX_WIDTH = 640
+                MAX_WIDTH = 480
 
                 if width > MAX_WIDTH:
 
@@ -142,7 +143,7 @@ def extract_pose(video_path, output_csv=None):
                     )
 
                 # ------------------------------------------------
-                # OpenCV BGR -> RGB
+                # Convert BGR -> RGB
                 # ------------------------------------------------
 
                 rgb = cv2.cvtColor(
@@ -150,10 +151,16 @@ def extract_pose(video_path, output_csv=None):
                     cv2.COLOR_BGR2RGB
                 )
 
+                # Release the OpenCV frame as soon as possible
+                del frame
+
                 image = mp.Image(
                     image_format=mp.ImageFormat.SRGB,
                     data=rgb
                 )
+
+                # Release RGB array after MediaPipe image creation
+                del rgb
 
                 timestamp_ms = int(
                     (frames_processed / fps) * 1000
@@ -202,6 +209,10 @@ def extract_pose(video_path, output_csv=None):
                 if writer:
                     writer.writerow(row)
 
+                # Explicitly release per-frame objects
+                del result
+                del image
+
                 frames_processed += 1
 
     finally:
@@ -230,3 +241,4 @@ def extract_pose(video_path, output_csv=None):
         "frames_processed": frames_processed,
         "frames_detected": frames_detected
     }
+

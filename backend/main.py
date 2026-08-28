@@ -26,7 +26,8 @@ from reportlab.lib.units import mm
 # ============================================================
 # Make backend/code importable
 # ============================================================
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(BASE_DIR, "code"))
 
 # ============================================================
 # Imports from project

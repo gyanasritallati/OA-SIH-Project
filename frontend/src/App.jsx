@@ -1,6 +1,7 @@
 
 import { useState } from 'react'
 import './App.css'
+
 const API_URL = 'https://koa-backend-ygct.onrender.com'
 
 function App() {
@@ -16,14 +17,15 @@ function App() {
 
     if (!file) return
 
-    // Maximum upload size: 50 MB
     const MAX_SIZE = 50 * 1024 * 1024
 
     if (file.size > MAX_SIZE) {
       setSelectedVideo(null)
       setVideoUrl(null)
       setResult(null)
-      setError('Video is too large. Please select a video smaller than 50 MB.')
+      setError(
+        'Video is too large. Please select a video smaller than 50 MB.'
+      )
       return
     }
 
@@ -62,7 +64,9 @@ function App() {
 
       if (!response.ok || !data.success) {
         throw new Error(
-          data.error || 'Video analysis failed'
+          data.detail ||
+          data.error ||
+          'Video analysis failed'
         )
       }
 
@@ -70,6 +74,8 @@ function App() {
 
     } catch (err) {
       console.error('❌ Analysis error:', err)
+      console.error('Error name:', err.name)
+      console.error('Error message:', err.message)
 
       setError(
         err.message ||
@@ -80,6 +86,7 @@ function App() {
       setAnalyzing(false)
     }
   }
+
   const downloadPDF = async () => {
     if (!result) return
 
@@ -91,19 +98,30 @@ function App() {
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
-          body: JSON.stringify(result),
+          body: JSON.stringify(result)
         }
       )
 
       console.log('📥 PDF response:', response.status)
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(
-          errorData.detail || 'PDF generation failed'
-        )
+        let errorMessage = 'PDF generation failed'
+
+        try {
+          const errorData = await response.json()
+
+          errorMessage =
+            errorData.detail ||
+            errorData.error ||
+            errorMessage
+
+        } catch {
+          // Ignore JSON parsing error
+        }
+
+        throw new Error(errorMessage)
       }
 
       const blob = await response.blob()
@@ -111,6 +129,7 @@ function App() {
       const url = window.URL.createObjectURL(blob)
 
       const link = document.createElement('a')
+
       link.href = url
       link.download = 'OA_Screening_Report.pdf'
 
@@ -126,10 +145,12 @@ function App() {
       console.error('❌ PDF error:', err)
 
       setError(
-        err.message || 'Could not generate PDF report.'
+        err.message ||
+        'Could not generate PDF report.'
       )
     }
   }
+
   const downloadCSV = () => {
     if (!result) return
 
@@ -137,18 +158,18 @@ function App() {
 
     let csv = 'OA Risk Analysis Report\n\n'
 
-    csv += 'Risk Score,' +
-      `${(prediction.risk * 100).toFixed(1)}%\n`
+    csv += 'Risk Score,'
+    csv += `${(prediction.risk * 100).toFixed(1)}%\n`
 
-    csv += 'Risk Band,' +
-      `${prediction.band}\n`
+    csv += 'Risk Band,'
+    csv += `${prediction.band}\n`
 
     if (prediction.stage) {
-      csv += 'Severity Grade,' +
-        `${prediction.stage.grade}\n`
+      csv += 'Severity Grade,'
+      csv += `${prediction.stage.grade}\n`
 
-      csv += 'Confidence,' +
-        `"${prediction.stage.confidence}"\n`
+      csv += 'Confidence,'
+      csv += `"${prediction.stage.confidence}"\n`
     }
 
     csv += '\nGait Measurements\n'
@@ -164,6 +185,7 @@ function App() {
     }
 
     csv += '\nAnalysis Information\n'
+
     csv += `Frames Processed,${result.frames_processed}\n`
     csv += `Frames Detected,${result.frames_detected}\n`
 
@@ -172,12 +194,15 @@ function App() {
 
     const blob = new Blob(
       [csv],
-      { type: 'text/csv;charset=utf-8;' }
+      {
+        type: 'text/csv;charset=utf-8;'
+      }
     )
 
     const url = URL.createObjectURL(blob)
 
     const link = document.createElement('a')
+
     link.href = url
     link.download = 'OA_Analysis_Report.csv'
 
@@ -431,6 +456,7 @@ function App() {
                   >
 
                     <div>
+
                       <strong>
                         {measurement.label}
                       </strong>
@@ -438,6 +464,7 @@ function App() {
                       <p>
                         {measurement.reading}
                       </p>
+
                     </div>
 
                     <span>
@@ -492,13 +519,20 @@ function App() {
 
             <div className="report-actions">
 
-
               <button
                 className="download-button"
                 onClick={downloadPDF}
                 disabled={!result}
               >
                 📄 Download PDF
+              </button>
+
+              <button
+                className="download-button"
+                onClick={downloadCSV}
+                disabled={!result}
+              >
+                📊 Download CSV
               </button>
 
             </div>
